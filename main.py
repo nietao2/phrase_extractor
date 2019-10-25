@@ -1,8 +1,9 @@
 import random
+from multiprocessing import Manager
 from queue import Queue
 
 from flashtext import KeywordProcessor
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, ProcessPoolExecutor
 
 kp = KeywordProcessor()
 with open('keywords.txt', 'r') as f:
@@ -10,9 +11,12 @@ with open('keywords.txt', 'r') as f:
         kp.add_keyword(word.strip().lower())
 
 thread_count = 10
-request_queue=Queue()
+procManager = Manager()
+request_queue = procManager.Queue()
+# request_queue=Queue()
 
-def task():
+def task(n):
+    print(n)
     try:
         rand=random.Random()
         while True:
@@ -30,10 +34,11 @@ def task():
         print(e)
         raise e
 
-executor=ThreadPoolExecutor(thread_count)
+executor=ProcessPoolExecutor(thread_count)
 try:
     for i in range(thread_count):
-        executor.submit(task)
+        fu = executor.submit(task,(i))
+
 
     with open('docs.txt', 'r') as f:
         tmp = []
